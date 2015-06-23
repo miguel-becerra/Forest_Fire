@@ -5,6 +5,7 @@
  *      Author: samsung
  */
 
+// AHORA LO PUEDO EDITAR
 #include <sqlite3.h>
 #include <string>
 
@@ -256,7 +257,7 @@ int main(){
   //-------------------------------------------------------------------
 
   // mas adelante, tratar de cambiar esto por una base de datos.
-  // hay que cambiarlo en landf también
+  // hay que cambiarlo en landf tambiÃ©n
   double alpha,lambda;
   cerr<<"-Leemos el landscape de "<<landfile<<endl;
   ifstream bland(landfile.c_str(), ios::binary);

@@ -1,0 +1,184 @@
+#!/bin/bash
+
+###############################################################
+#parametros 
+
+#Id del trabajo, comentar para autoseleccion
+ID="TEST_1" #usamos el 0 para tests
+#ID="HAMF_IN$1_$2"
+
+# archivo de landscape: land archivo
+export landf="LAND_EXPDATA.bdat"
+#export landf="LAND_IM00.bdat"
+
+# rango: l rango
+# l = rango para encontrar vecinos
+export l=1.5
+
+# condicion inicial: x0 y0
+#	Si ambos valores cumplen 1>= x >=0, se usa 
+#	condicion inicial en ese punto (dado como fraccion del total)
+#	Si alguno esta fuera del rango, se usa condicion inicial como linea
+# 	de la siguiente forma
+#		     xe(0,1), y>1
+#               _____
+#              |     |
+#  x<0, ye(0,1)|     | x>1, ye(0,1)
+#              |_____|
+#		     xe(0,1), y<0
+#
+export x0=0.0
+export y0=0.0
+# si x0 + y0 = 0 se usa el
+#nuevo formato para las semillas:
+export sx="0.3514       0.4476"
+export sy="0.8568571429 0.803"
+
+# kmax= cota de realizaciones (kn<kmax)
+# en ke iteracion escribir el output intensivo: kw **
+# kw < 0 para desactivar la escritura
+export kmax=1
+export kw=0
+#Tiempos a los ke se imprime (print Times):
+# en el caso del archivo de Yann
+# comienzo : 9:40    diff
+# datos 1  : 12:00   2:20
+# datos 2  : 14:34   4:54
+# datos 3  : 16:30   6:50
+#en el array debe ir la diferencia de tiempo en segundos
+#por ejemplo usando
+# echo "$(date --date=16:30 +%s) - $(date --date=9:40 +%s)" |bc -l
+export pTimes="8400 17640 24600"
+
+# archivo de vegetacion y de viento:
+# (comentar si no se usa)
+export vegf="VEG_EXPDATA.bdat"
+export windf="WIND_EXPDATA.bdat"
+
+# DIMS 1 calcula las dimensiones fractales
+#      0 no las calcula
+export DIMS=0
+
+# Pinicial, final y numero de puntos
+export Pini=0.0
+export Pfin=0.5
+export nPP=2
+
+# Terminar los calculos si se alcanza el borde
+# 0 continua
+# 1 termina
+# (incompatible con CI de linea)
+export ENDB=0
+
+# =1 imprime el combustible restante de cada sitio en cada paso
+# NO RECOMENDADO, SOLO PARA DEBUG!!!
+export FPRINT=0
+
+###############################################################
+#coeficientes fisicos
+
+#altura y diametro del canopi y la llama
+export vCh=3.1
+export vCd=1.5
+export vFh=4.5
+export vFd=1.4
+#distancia fisica
+export pdx=5.0
+
+#vida media del arbol
+#export Tmean=2.27
+export Tmean=15
+
+#coeficiente de proporcionalidad degradacion-energia
+#export alpha=0.0000002
+export  alpha=0.0000018
+
+
+#degradation/burning threshold
+export Cth=0.9
+
+#degradation/burning threshold for the derivative
+export dCth=-0.0002
+
+###############################################################
+
+THIS=`readlink -f $0`
+. directorios 
+
+
+cd $DIRIO
+pwd
+
+if [ -z "$ID" ]; then
+ #Deteerminamos el ID
+ #ID=`date +%s`;  #POSIX time
+ #		#para pasarlo a hora normal usar 
+ #		# date -d '1970-01-01 ID sec'
+  ID=`ls -d HAMF_???? |sort -r |head -n1 |cut -d"_" -f2`
+  ID=`echo "$ID + 1" |bc -l`
+  ID=`printf "%04i" $ID`
+  ID="HAMF_$ID"
+fi
+echo "TRABAJO $ID"
+
+#Guardamos en el log antes de ejecutar, pues no es necesario terminar
+ echo "$ID $l $x0 $y0 $kw $landf" >> HAMF_log
+
+
+[ -d "$ID" ] || mkdir "$ID"
+cd "$ID"
+#cp $DIRLAND/$landf ./
+cp $DIRIO/$(basename $landf .bdat)/*.bdat ./
+cp $DIRIO/$(basename $landf .bdat)/*.dat ./
+cp $THIS ./
+cp $TOOLS/*.gnuplot ./
+#cp $TOOLS/anima ./
+#cp $TOOLS/MANIPULATE/manipulate.gnuplot ./
+
+now=$(date +%d%m%y-%T)
+rm job.db
+
+if [ "$1" = "profile" ];then
+    cd $DIRHAMF
+    make profile || exit 1
+    cd -
+    $HAMF
+elif [ "$1" = "debug" ];then
+    cd $DIRHAMF
+    make debug || exit 1
+    cd -
+    gdb $HAMF
+else
+    cd $DIRHAMF
+    make || exit 1
+    cd -
+    $HAMF
+fi
+#gdb $HAMF
+#cat log
+
+cp job.db job.${now}.db
+echo "Base de datos escrita en $(pwd)/job.${now}.db"
+
+
+#Mfrente Mquemados Mactivos \
+#Masas \
+
+# filters="estado estadoP percolacion dim-superficie \
+# Dfrente Dquemados Dactivos \
+# DMfrente DMquemados DMactivos \
+# dinamica \
+# meanDMFF meanDMQ meanDMA \
+# Smass Sdim massQT \
+# Ractivos Rfrente \
+# time fuel Pci"
+# for i in $filters; do
+#     if [ -s "output.dat" ]; then
+#     	echo "filtrando: $i";
+#     	$FILTRA $i output.dat > $i.dat
+#     else
+# 	echo "No se filtra $i : output.dat tiene 0 bytes"
+#     fi		
+# done
+
+#echo "calculo de $ID terminado" |dzen2 -p -bg red -fg yellow -e 'button1=exit;'

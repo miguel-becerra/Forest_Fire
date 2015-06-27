@@ -1,0 +1,1 @@
+if(i<imax) print i; replot; i=i+di; reread; else quit

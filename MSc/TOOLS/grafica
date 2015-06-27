@@ -1,0 +1,21 @@
+#!/bin/bash
+
+gnuplot -persist << EOF
+
+set term gif animate transparent opt delay 100 size 600,600 x000000
+set out "avance.gif"
+
+imax=1000
+i=0
+dt=0.3
+
+#set xrange [0:10000]
+#set yrange [0:10000]
+
+set pm3d corners2color c1 map
+set size ratio -1
+splot "avance.dat" i i u 1:2:3 w pm3d
+
+load "anima"
+
+EOF

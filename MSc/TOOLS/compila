@@ -1,0 +1,81 @@
+#!/bin/bash
+
+OPTS="-O3"
+PROFILE=0
+DEBUG=0
+ARCH=`uname -a |grep "x86_64"`
+
+if [ -n "$ARCH" ]; then
+        ARCH="em64t";
+else
+         ARCH="ia32";
+fi
+
+
+while [ $1 ];do
+	case $1 in
+	"-i")
+		PROG=$(echo $2 |cut -d. -f1)
+	shift
+	shift;;
+
+	"-x")
+		RUN=1
+	shift;;
+
+	"-p")
+		OPTS="$OPTS $1"
+		PROFILE=1
+	shift;;
+
+	"-g")
+		OPTS="$OPTS $1"
+		DEBUG=1
+	shift;;
+	clear)
+		rm *.dat
+		rm *.gpl
+		rm aux*
+	shift;;
+	*)
+		OPTS="$OPTS $1"
+	shift;;
+	esac
+done
+
+rm ../IO/land.bdat
+#compilamos
+if [ $PROG ]; then
+	icpc ${PROG}.cpp -o ${PROG}.x -lmkl_$ARCH -openmp ${OPTS}
+	a=$?
+	echo "compilacion con salida $a"
+else
+	echo -e "Uso: $0 -i nombreprograma [opciones] | clear
+			donde opciones son:
+			-p 	profile
+			-g 	debug"
+
+fi
+
+#ejecutamos
+if [[ ($PROFILE -eq 0) && ($DEBUG -eq 0) && ($a -eq 0) && ($RUN -eq 1)]];then
+	./${PROG}.x
+
+elif [[($PROFILE -eq 1) && ($DEBUG -eq 0) && ($a -eq 0) ]];then
+	./${PROG}.x
+	gprof ${PROG}.x gmon.out >profile
+	echo "Profile escrito en \"profile\""	
+
+elif [[ ($PROFILE -eq 0) && ($DEBUG -eq 1) && ($a -eq 0) ]];then
+	idbc ${PROG}.x
+
+elif [[ ($PROFILE -eq 1) && ($DEBUG -eq 1) && !$a ]];then
+	echo "No se que hacer...."
+fi
+
+#mplayer -quiet /usr/share/sounds/purple/send.wav
+echo -e "\a"
+echo -e "\a"
+echo -e "\a"
+echo -e "\a"
+echo -e "\a"

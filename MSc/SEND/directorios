@@ -1,0 +1,13 @@
+HERE=`pwd`
+DIRIO="$HERE/../IO"
+DIRLAND="$HERE/../LAND"
+DIRPERC="$HERE/../PERC"
+DIRHAMF="$HERE/../HAMF"
+TOOLS="$HERE/../../TOOLS"
+
+PERC="$HERE/../PERC/percolation.x"
+LAND="$HERE/../LAND/landscape.x"
+HAMF="$HERE/../HAMF/hamf.x"
+FILTRA="$TOOLS/filtra"
+
+
